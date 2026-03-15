@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout — Maison</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .checkout-page { padding: 60px 0 80px; }
+        .checkout-layout { display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: start; }
+        .checkout-form-section { background: var(--white); border-radius: var(--radius-md); padding: 36px; box-shadow: var(--shadow-sm); }
+        .form-section-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 500; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--soft-beige); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .order-review { background: var(--white); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-sm); position: sticky; top: 88px; }
+        .review-title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 500; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--soft-beige); }
+        .review-item { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+        .review-item-img { width: 54px; height: 54px; object-fit: cover; border-radius: var(--radius-sm); flex-shrink: 0; }
+        .review-item-name { font-size: 0.85rem; font-weight: 500; margin-bottom: 2px; }
+        .review-item-meta { font-size: 0.78rem; color: #999; }
+        .review-item-price { margin-left: auto; font-size: 0.88rem; font-weight: 600; flex-shrink: 0; }
+        .review-divider { border: none; border-top: 1px solid var(--soft-beige); margin: 16px 0; }
+        .review-total { display: flex; justify-content: space-between; font-weight: 600; font-size: 1rem; }
+        .btn-place-order { width: 100%; margin-top: 20px; background: var(--muted-blue); color: var(--white); border: none; border-radius: var(--radius-sm); padding: 15px; font-size: 0.9rem; font-weight: 500; font-family: var(--font-body); letter-spacing: 0.04em; cursor: pointer; transition: all var(--transition); }
+        .btn-place-order:hover { background: #5b7a8c; box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .btn-place-order:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .order-success { text-align: center; padding: 80px 40px; background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+        .success-icon { font-size: 3.5rem; margin-bottom: 20px; }
+        .order-success h2 { font-family: var(--font-display); font-size: 1.8rem; font-weight: 500; margin-bottom: 12px; }
+        .order-success p { color: #888; font-size: 0.9rem; margin-bottom: 28px; }
+        @media (max-width: 900px) { .checkout-layout { grid-template-columns: 1fr; } .order-review { position: static; } }
+        @media (max-width: 520px) { .form-row { grid-template-columns: 1fr; } .checkout-form-section { padding: 24px; } }
+    </style>
+</head>
+<body>
+    <header id="navbar"></header>
+    <main class="checkout-page">
+        <div class="container">
+            <div style="margin-bottom:40px;"><h1 class="section-title">Checkout</h1><p class="section-sub">Review your order and complete your purchase.</p></div>
+            <div id="checkoutContent"></div>
+        </div>
+    </main>
+    <footer class="footer"><div class="container"><p class="footer-logo">Maison</p><p>© 2024 Maison. Crafted with care.</p></div></footer>
+    <script src="api.js"></script>
+    <script>
+        let cartData = null;
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderNavbar('');
+            if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+            try {
+                cartData = await apiFetch('/cart');
+                if (!cartData.items.length) { document.getElementById('checkoutContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍</div><h3>Your cart is empty</h3><p><a href="index.html" class="btn btn-primary">Start Shopping</a></p></div>`; return; }
+                renderCheckout();
+            } catch (err) { document.getElementById('checkoutContent').innerHTML = `<p style="color:red">${err.message}</p>`; }
+        });
+
+        function renderCheckout() {
+            const user = Auth.getUser();
+            document.getElementById('checkoutContent').innerHTML = `
+                <div class="checkout-layout">
+                    <div class="checkout-form-section">
+                        <h2 class="form-section-title">📋 Delivery Information</h2>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">First Name</label><input type="text" class="form-control" id="firstName" value="${user?.name?.split(' ')[0] || ''}" /></div>
+                            <div class="form-group"><label class="form-label">Last Name</label><input type="text" class="form-control" id="lastName" value="${user?.name?.split(' ').slice(1).join(' ') || ''}" /></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" id="email" value="${user?.email || ''}" /></div>
+                        <div class="form-group"><label class="form-label">Street Address</label><input type="text" class="form-control" id="street" placeholder="123 Main Street" /></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">City</label><input type="text" class="form-control" id="city" /></div>
+                            <div class="form-group"><label class="form-label">State</label><input type="text" class="form-control" id="state" /></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">ZIP Code</label><input type="text" class="form-control" id="zip" /></div>
+                            <div class="form-group"><label class="form-label">Country</label><input type="text" class="form-control" id="country" placeholder="India" /></div>
+                        </div>
+                        <div style="margin-top:8px;background:var(--soft-beige);border-radius:var(--radius-sm);padding:16px;font-size:0.85rem;color:#888;">
+                            <strong style="color:var(--charcoal);">Demo Mode:</strong> No real payment. Order placed directly.
+                        </div>
+                    </div>
+                    <aside class="order-review">
+                        <h2 class="review-title">Your Order (${cartData.items.length} item${cartData.items.length !== 1 ? 's' : ''})</h2>
+                        ${cartData.items.map(item => `
+                            <div class="review-item">
+                                <img class="review-item-img" src="${item.image || 'https://via.placeholder.com/54'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/54'" />
+                                <div><p class="review-item-name">${item.name}</p><p class="review-item-meta">Qty: ${item.quantity} × $${parseFloat(item.price).toFixed(2)}</p></div>
+                                <p class="review-item-price">$${(item.price * item.quantity).toFixed(2)}</p>
+                            </div>`).join('')}
+                        <hr class="review-divider" />
+                        <div class="review-total"><span>Total</span><span>$${parseFloat(cartData.total).toFixed(2)}</span></div>
+                        <button class="btn-place-order" id="placeOrderBtn" onclick="placeOrder()">Place Order →</button>
+                    </aside>
+                </div>`;
+        }
+
+        async function placeOrder() {
+            const btn = document.getElementById('placeOrderBtn');
+            const street = document.getElementById('street')?.value.trim();
+            const city   = document.getElementById('city')?.value.trim();
+            const state  = document.getElementById('state')?.value.trim();
+            const zip    = document.getElementById('zip')?.value.trim();
+            const country= document.getElementById('country')?.value.trim();
+            if (!street || !city || !state || !zip || !country) { showToast('Please fill in all address fields.', 'error'); return; }
+            btn.disabled = true; btn.textContent = 'Placing order…';
+            try {
+                const data = await apiFetch('/orders/create', { method: 'POST', body: JSON.stringify({ address: `${street}, ${city}, ${state} ${zip}, ${country}` }) });
+                document.getElementById('checkoutContent').innerHTML = `<div class="order-success"><div class="success-icon">✅</div><h2>Order Placed Successfully!</h2><p>Thank you! Order #${data.orderId}<br/>Total: <strong>$${parseFloat(data.total).toFixed(2)}</strong></p><a href="index.html" class="btn btn-primary">Continue Shopping</a></div>`;
+                updateCartBadge();
+            } catch (err) { btn.disabled = false; btn.textContent = 'Place Order →'; showToast(err.message, 'error'); }
+        }
+    </script>
+</body>
+</html>

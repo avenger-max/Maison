@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product — Maison</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .product-view { padding: 60px 0 80px; }
+        .breadcrumb { font-size: 0.78rem; color: #bbb; margin-bottom: 40px; }
+        .breadcrumb a { color: var(--muted-blue); }
+        .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+        .product-img-wrap { border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-md); }
+        .product-img { width: 100%; aspect-ratio: 4/5; object-fit: cover; }
+        .product-info { position: sticky; top: 100px; }
+        .product-category { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted-blue); margin-bottom: 12px; font-weight: 500; }
+        .product-title { font-family: var(--font-display); font-size: clamp(1.6rem,3vw,2.2rem); font-weight: 500; line-height: 1.2; margin-bottom: 16px; }
+        .product-price { font-size: 1.5rem; font-weight: 600; margin-bottom: 24px; }
+        .divider { border: none; border-top: 1px solid var(--soft-beige); margin: 24px 0; }
+        .product-description { font-size: 0.9rem; color: #666; line-height: 1.9; font-weight: 300; margin-bottom: 28px; }
+        .stock-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 500; margin-bottom: 28px; }
+        .stock-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .qty-row { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .qty-control { display: flex; align-items: center; border: 1.5px solid var(--light-grey); border-radius: var(--radius-sm); overflow: hidden; }
+        .qty-btn { background: none; border: none; width: 40px; height: 44px; font-size: 1.1rem; color: var(--charcoal); transition: background var(--transition); }
+        .qty-btn:hover { background: var(--soft-beige); }
+        .qty-display { width: 48px; text-align: center; font-size: 0.9rem; font-weight: 500; border-left: 1px solid var(--light-grey); border-right: 1px solid var(--light-grey); height: 44px; line-height: 44px; }
+        .btn-add-cart-lg { flex: 1; background: var(--charcoal); color: var(--white); border: none; border-radius: var(--radius-sm); padding: 14px 28px; font-size: 0.9rem; font-weight: 500; font-family: var(--font-body); letter-spacing: 0.04em; transition: all var(--transition); }
+        .btn-add-cart-lg:hover { background: var(--muted-blue); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .product-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: var(--soft-beige); border-radius: var(--radius-sm); padding: 20px; font-size: 0.82rem; }
+        .meta-item span:first-child { display: block; color: #999; margin-bottom: 4px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+        .meta-item span:last-child { font-weight: 500; }
+        @media (max-width: 768px) { .product-layout { grid-template-columns: 1fr; gap: 32px; } .product-info { position: static; } }
+    </style>
+</head>
+<body>
+    <header id="navbar"></header>
+    <main class="product-view">
+        <div class="container">
+            <p class="breadcrumb"><a href="index.html">← Back to Shop</a></p>
+            <div id="productContent">
+                <div class="product-layout">
+                    <div class="skeleton" style="aspect-ratio:4/5;border-radius:var(--radius-md);"></div>
+                    <div><div class="skeleton" style="height:12px;width:30%;margin-bottom:16px;"></div><div class="skeleton" style="height:28px;width:75%;margin-bottom:8px;"></div><div class="skeleton" style="height:28px;width:60%;margin-bottom:24px;"></div><div class="skeleton" style="height:80px;width:100%;"></div></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer"><div class="container"><p class="footer-logo">Maison</p><p>© 2024 Maison. Crafted with care.</p></div></footer>
+    <script src="api.js"></script>
+    <script>
+        let qty = 1, product = null;
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderNavbar('');
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (!id) return window.location.href = 'index.html';
+            try {
+                const data = await apiFetch(`/products/${id}`);
+                product = data.product;
+                document.title = `${product.name} — Maison`;
+                const inStock = product.stock > 0;
+                document.getElementById('productContent').innerHTML = `
+                    <div class="product-layout">
+                        <div class="product-img-wrap"><img class="product-img" src="${product.image || 'https://via.placeholder.com/800x1000'}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/800x1000'" /></div>
+                        <div class="product-info">
+                            <p class="product-category">${product.category || 'General'}</p>
+                            <h1 class="product-title">${product.name}</h1>
+                            <p class="product-price">$${parseFloat(product.price).toFixed(2)}</p>
+                            <hr class="divider" />
+                            <p class="product-description">${product.description || 'No description available.'}</p>
+                            <div class="stock-badge"><span class="stock-dot" style="background:${inStock ? '#2e7d52' : '#c0392b'};"></span>${inStock ? `In Stock (${product.stock} available)` : 'Out of Stock'}</div>
+                            ${inStock ? `<div class="qty-row"><div class="qty-control"><button class="qty-btn" onclick="changeQty(-1)">−</button><div class="qty-display" id="qtyDisplay">1</div><button class="qty-btn" onclick="changeQty(1)">+</button></div><button class="btn-add-cart-lg" onclick="addToCart()">Add to Cart</button></div>` : `<button class="btn-add-cart-lg" disabled style="opacity:0.4;cursor:not-allowed;width:100%;">Out of Stock</button>`}
+                            <hr class="divider" />
+                            <div class="product-meta"><div class="meta-item"><span>Category</span><span>${product.category || '—'}</span></div><div class="meta-item"><span>SKU</span><span>MSN-${String(product.id).padStart(4,'0')}</span></div><div class="meta-item"><span>Availability</span><span>${inStock ? 'In Stock' : 'Sold Out'}</span></div><div class="meta-item"><span>Stock</span><span>${product.stock} units</span></div></div>
+                        </div>
+                    </div>`;
+            } catch (err) {
+                document.getElementById('productContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><h3>Product not found</h3><p><a href="index.html" class="btn btn-primary">Back to Shop</a></p></div>`;
+            }
+        });
+        function changeQty(delta) { qty = Math.max(1, Math.min(qty + delta, product?.stock || 1)); document.getElementById('qtyDisplay').textContent = qty; }
+        async function addToCart() {
+            if (!Auth.isLoggedIn()) { showToast('Please sign in first.', 'error'); setTimeout(() => window.location.href = 'login.html', 1500); return; }
+            try {
+                await apiFetch('/cart/add', { method: 'POST', body: JSON.stringify({ product_id: product.id, quantity: qty }) });
+                showToast('Added to cart ✓', 'success');
+                updateCartBadge();
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Cart — Maison</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .cart-page { padding: 60px 0 80px; }
+        .cart-layout { display: grid; grid-template-columns: 1fr 340px; gap: 40px; align-items: start; }
+        .cart-item { display: grid; grid-template-columns: 90px 1fr auto; gap: 20px; align-items: center; background: var(--white); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 14px; transition: box-shadow var(--transition); }
+        .cart-item:hover { box-shadow: var(--shadow-md); }
+        .cart-item-img { width: 90px; height: 90px; object-fit: cover; border-radius: var(--radius-sm); }
+        .cart-item-name { font-family: var(--font-display); font-size: 1rem; font-weight: 500; margin-bottom: 4px; }
+        .cart-item-price { font-size: 0.875rem; color: #888; margin-bottom: 12px; }
+        .cart-item-qty { display: flex; align-items: center; border: 1.5px solid var(--light-grey); border-radius: var(--radius-sm); overflow: hidden; width: fit-content; }
+        .qty-btn-sm { background: none; border: none; width: 32px; height: 32px; font-size: 1rem; color: var(--charcoal); cursor: pointer; transition: background var(--transition); }
+        .qty-btn-sm:hover { background: var(--soft-beige); }
+        .qty-num { width: 36px; text-align: center; font-size: 0.85rem; font-weight: 500; border-left: 1px solid var(--light-grey); border-right: 1px solid var(--light-grey); line-height: 32px; }
+        .cart-item-subtotal { font-weight: 600; font-size: 1rem; margin-bottom: 8px; }
+        .btn-remove { background: none; border: none; color: #ccc; font-size: 0.75rem; cursor: pointer; font-family: var(--font-body); transition: color var(--transition); padding: 4px 0; display: block; margin-left: auto; }
+        .btn-remove:hover { color: var(--error); }
+        .order-summary { background: var(--white); border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-sm); position: sticky; top: 88px; }
+        .summary-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 500; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--soft-beige); }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.875rem; color: #777; }
+        .summary-total { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 600; color: var(--charcoal); padding-top: 16px; margin-top: 8px; border-top: 1px solid var(--soft-beige); margin-bottom: 24px; }
+        .btn-checkout { width: 100%; background: var(--charcoal); color: var(--white); border: none; border-radius: var(--radius-sm); padding: 15px; font-size: 0.9rem; font-weight: 500; font-family: var(--font-body); letter-spacing: 0.04em; transition: all var(--transition); cursor: pointer; }
+        .btn-checkout:hover { background: var(--muted-blue); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .continue-link { display: block; text-align: center; margin-top: 14px; font-size: 0.8rem; color: #aaa; }
+        .continue-link:hover { color: var(--charcoal); }
+        @media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } .order-summary { position: static; } }
+    </style>
+</head>
+<body>
+    <header id="navbar"></header>
+    <main class="cart-page">
+        <div class="container">
+            <div style="margin-bottom:40px;"><h1 class="section-title">Your Cart</h1><p class="section-sub" id="cartSubtitle">Loading your items…</p></div>
+            <div class="cart-layout">
+                <div id="cartItems"></div>
+                <aside class="order-summary">
+                    <h2 class="summary-title">Order Summary</h2>
+                    <div class="summary-row"><span>Subtotal</span><span id="summarySubtotal">—</span></div>
+                    <div class="summary-row"><span>Shipping</span><span>Free</span></div>
+                    <div class="summary-total"><span>Total</span><span id="summaryTotal">—</span></div>
+                    <button class="btn-checkout" onclick="window.location.href='checkout.html'">Proceed to Checkout →</button>
+                    <a href="index.html" class="continue-link">← Continue Shopping</a>
+                </aside>
+            </div>
+        </div>
+    </main>
+    <footer class="footer"><div class="container"><p class="footer-logo">Maison</p><p>© 2024 Maison. Crafted with care.</p></div></footer>
+    <script src="api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNavbar('cart');
+            if (!Auth.isLoggedIn()) { showEmpty('Please <a href="login.html">sign in</a> to view your cart.'); return; }
+            loadCart();
+        });
+
+        async function loadCart() {
+            try {
+                const data = await apiFetch('/cart');
+                renderCart(data);
+            } catch (err) { showEmpty('Failed to load cart: ' + err.message); }
+        }
+
+        function renderCart(data) {
+            const subtitle = document.getElementById('cartSubtitle');
+            const container = document.getElementById('cartItems');
+            if (!data.items.length) {
+                subtitle.textContent = '0 items';
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍</div><h3>Your cart is empty</h3><p>Add some beautiful items from our shop.</p><a href="index.html" class="btn btn-primary">Shop Now</a></div>`;
+                updateSummary(0); return;
+            }
+            const count = data.items.reduce((s, i) => s + i.quantity, 0);
+            subtitle.textContent = `${count} item${count !== 1 ? 's' : ''}`;
+            container.innerHTML = data.items.map(item => `
+                <div class="cart-item" id="cart-item-${item.id}">
+                    <img class="cart-item-img" src="${item.image || 'https://via.placeholder.com/90'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/90'" />
+                    <div>
+                        <p class="cart-item-name">${item.name}</p>
+                        <p class="cart-item-price">$${parseFloat(item.price).toFixed(2)} each</p>
+                        <div class="cart-item-qty">
+                            <button class="qty-btn-sm" onclick="updateQty(${item.id},${item.quantity - 1})">−</button>
+                            <span class="qty-num">${item.quantity}</span>
+                            <button class="qty-btn-sm" onclick="updateQty(${item.id},${item.quantity + 1})">+</button>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <p class="cart-item-subtotal">$${(item.price * item.quantity).toFixed(2)}</p>
+                        <button class="btn-remove" onclick="removeItem(${item.id})">Remove</button>
+                    </div>
+                </div>`).join('');
+            updateSummary(data.total);
+        }
+
+        function updateSummary(total) {
+            document.getElementById('summarySubtotal').textContent = `$${parseFloat(total).toFixed(2)}`;
+            document.getElementById('summaryTotal').textContent = `$${parseFloat(total).toFixed(2)}`;
+        }
+
+        async function updateQty(cartId, newQty) {
+            if (newQty < 1) { await removeItem(cartId); return; }
+            try { await apiFetch('/cart/update', { method: 'PUT', body: JSON.stringify({ cart_id: cartId, quantity: newQty }) }); loadCart(); }
+            catch (err) { showToast(err.message, 'error'); }
+        }
+
+        async function removeItem(cartId) {
+            const el = document.getElementById(`cart-item-${cartId}`);
+            if (el) { el.style.opacity = '0.4'; el.style.pointerEvents = 'none'; }
+            try { await apiFetch(`/cart/remove/${cartId}`, { method: 'DELETE' }); loadCart(); updateCartBadge(); }
+            catch (err) { if (el) { el.style.opacity = '1'; el.style.pointerEvents = ''; } showToast(err.message, 'error'); }
+        }
+
+        function showEmpty(msg) {
+            document.getElementById('cartSubtitle').innerHTML = msg;
+            document.getElementById('cartItems').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍</div><h3>Nothing here yet</h3><p><a href="index.html" class="btn btn-primary">Start Shopping</a></p></div>`;
+            updateSummary(0);
+        }
+    </script>
+</body>
+</html>

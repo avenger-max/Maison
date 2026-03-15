@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maison — Thoughtfully Made</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .hero { background: var(--soft-beige); padding: 80px 0; text-align: center; border-bottom: 1px solid var(--light-grey); }
+        .hero-tag { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted-blue); margin-bottom: 16px; font-weight: 500; }
+        .hero h1 { font-family: var(--font-display); font-size: clamp(2.4rem,5vw,3.8rem); font-weight: 500; color: var(--charcoal); line-height: 1.15; margin-bottom: 20px; }
+        .hero h1 em { font-style: italic; color: #7a8f8f; }
+        .hero p { font-size: 0.95rem; color: #888; font-weight: 300; max-width: 460px; margin: 0 auto 32px; line-height: 1.8; }
+        .shop-section { padding: 60px 0 40px; }
+        .shop-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 16px; }
+        .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; flex-wrap: wrap; }
+        .search-wrap { flex: 1; min-width: 220px; position: relative; }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; color: #bbb; pointer-events: none; }
+        #searchInput { width: 100%; padding: 12px 16px 12px 40px; border: 1.5px solid var(--light-grey); border-radius: var(--radius-sm); background: var(--white); font-size: 0.875rem; color: var(--charcoal); outline: none; transition: border-color var(--transition); font-family: var(--font-body); }
+        #searchInput:focus { border-color: var(--muted-blue); }
+        .category-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .category-btn { padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--light-grey); background: var(--white); font-size: 0.78rem; font-family: var(--font-body); color: #777; transition: all var(--transition); cursor: pointer; }
+        .category-btn:hover, .category-btn.active { background: var(--charcoal); color: var(--white); border-color: var(--charcoal); }
+        .skeleton-card { background: var(--white); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
+    </style>
+</head>
+<body>
+    <header id="navbar"></header>
+
+    <section class="hero">
+        <div class="container">
+            <p class="hero-tag">Curated Home &amp; Life</p>
+            <h1>Objects made with<br><em>intention and care</em></h1>
+            <p>A thoughtfully curated collection of everyday objects — handcrafted, sustainably sourced, built to last.</p>
+            <a href="#shop" class="btn btn-primary">Explore the Collection</a>
+        </div>
+    </section>
+
+    <section class="shop-section" id="shop">
+        <div class="container">
+            <div class="shop-header">
+                <div>
+                    <h2 class="section-title">Shop All</h2>
+                    <p id="product-count" class="section-sub">Loading products…</p>
+                </div>
+            </div>
+            <div class="filter-bar">
+                <div class="search-wrap">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search products…" autocomplete="off" />
+                </div>
+                <div class="category-filters" id="categoryFilters">
+                    <button class="category-btn active" data-cat="">All</button>
+                    <button class="category-btn" data-cat="Home">Home</button>
+                    <button class="category-btn" data-cat="Kitchen">Kitchen</button>
+                    <button class="category-btn" data-cat="Bedroom">Bedroom</button>
+                    <button class="category-btn" data-cat="Bathroom">Bathroom</button>
+                    <button class="category-btn" data-cat="Garden">Garden</button>
+                    <button class="category-btn" data-cat="Accessories">Accessories</button>
+                </div>
+            </div>
+            <div class="product-grid" id="productGrid">
+                <div class="skeleton-card"><div class="skeleton" style="height:240px;"></div><div style="padding:18px 20px;"><div class="skeleton" style="height:12px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:85%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:40%;"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton" style="height:240px;"></div><div style="padding:18px 20px;"><div class="skeleton" style="height:12px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:85%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:40%;"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton" style="height:240px;"></div><div style="padding:18px 20px;"><div class="skeleton" style="height:12px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:85%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:40%;"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton" style="height:240px;"></div><div style="padding:18px 20px;"><div class="skeleton" style="height:12px;width:60%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:85%;margin-bottom:10px;"></div><div class="skeleton" style="height:12px;width:40%;"></div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer"><div class="container"><p class="footer-logo">Maison</p><p>© 2024 Maison. Crafted with care.</p></div></footer>
+
+    <script src="api.js"></script>
+    <script>
+        let allProducts = [], activeCategory = '', searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNavbar('home');
+            loadProducts();
+            setupSearch();
+            setupCategories();
+        });
+
+        async function loadProducts() {
+            try {
+                const data = await apiFetch('/products');
+                allProducts = data.products;
+                renderProducts(allProducts);
+            } catch (err) {
+                document.getElementById('productGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">⚠️</div><h3>Could not load products</h3><p>${err.message}</p></div>`;
+            }
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('productGrid');
+            const count = document.getElementById('product-count');
+            count.textContent = `${products.length} item${products.length !== 1 ? 's' : ''}`;
+            if (!products.length) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🔍</div><h3>No products found</h3><p>Try a different search or category.</p></div>`;
+                return;
+            }
+            grid.innerHTML = products.map(p => `
+                <article class="product-card" onclick="window.location='product.html?id=${p.id}'">
+                    <div class="product-card-img-wrap">
+                        <img class="product-card-img" src="${p.image || 'https://via.placeholder.com/600x400'}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'" />
+                    </div>
+                    <div class="product-card-body">
+                        <p class="product-card-category">${p.category || 'General'}</p>
+                        <h3 class="product-card-name">${p.name}</h3>
+                        <p class="product-card-price">$${parseFloat(p.price).toFixed(2)}</p>
+                        <div class="product-card-footer">
+                            <span style="font-size:0.78rem;color:#bbb;">${p.stock > 0 ? `${p.stock} in stock` : '<span style="color:#c0392b;">Out of stock</span>'}</span>
+                            <button class="btn-add-cart" onclick="event.stopPropagation();addToCart(${p.id},'${p.name}')" ${p.stock === 0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Add to Cart</button>
+                        </div>
+                    </div>
+                </article>`).join('');
+        }
+
+        function filterProducts() {
+            let filtered = allProducts;
+            if (activeCategory) filtered = filtered.filter(p => p.category === activeCategory);
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || (p.description && p.description.toLowerCase().includes(q)));
+            }
+            renderProducts(filtered);
+        }
+
+        function setupSearch() {
+            let debounce;
+            document.getElementById('searchInput').addEventListener('input', e => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => { searchQuery = e.target.value.trim(); filterProducts(); }, 300);
+            });
+        }
+
+        function setupCategories() {
+            document.getElementById('categoryFilters').addEventListener('click', e => {
+                const btn = e.target.closest('.category-btn');
+                if (!btn) return;
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCategory = btn.dataset.cat;
+                filterProducts();
+            });
+        }
+
+        async function addToCart(productId, name) {
+            if (!Auth.isLoggedIn()) { showToast('Please sign in to add items.', 'error'); setTimeout(() => window.location.href = 'login.html', 1500); return; }
+            try {
+                await apiFetch('/cart/add', { method: 'POST', body: JSON.stringify({ product_id: productId, quantity: 1 }) });
+                showToast(`"${name}" added to cart ✓`, 'success');
+                updateCartBadge();
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+    </script>
+</body>
+</html>
