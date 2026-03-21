@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Database ──────────────────────────────────────────────────
-require('./config/db');
+//require('./config/db');//1
 
 // ─── Root Route (shows API is alive) ──────────────────────────
 app.get('/', (req, res) => {
