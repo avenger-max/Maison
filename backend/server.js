@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Database ──────────────────────────────────────────────────
-//require('./config/db');//1
+require('./config/db');//1
 
 // ─── Root Route (shows API is alive) ──────────────────────────
 app.get('/', (req, res) => {
@@ -39,10 +39,10 @@ app.get('/', (req, res) => {
 });
 
 // ─── API Routes ────────────────────────────────────────────────
-//app.use('/api/auth',     require('./routes/authRoutes'));
-//app.use('/api/products', require('./routes/productRoutes'));
-//app.use('/api/cart',     require('./routes/cartRoutes'));
-//app.use('/api/orders',   require('./routes/orderRoutes'));
+app.use('/api/auth',     require('./routes/authRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/cart',     require('./routes/cartRoutes'));
+app.use('/api/orders',   require('./routes/orderRoutes'));
 
 // ─── Health Check ──────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
