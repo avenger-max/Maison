@@ -81,15 +81,47 @@
             setupCategories();
         });
 
-        async function loadProducts() {
-            try {
-                const data = await apiFetch('/products');
-                allProducts = data.products;
-                renderProducts(allProducts);
-            } catch (err) {
-                document.getElementById('productGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">⚠️</div><h3>Could not load products</h3><p>${err.message}</p></div>`;
-            }
-        }
+       // 🔥 Dummy Products (ADD THIS ABOVE loadProducts)
+const dummyProducts = [
+    {
+        id: 1,
+        name: "Wooden Chair",
+        price: 120,
+        category: "Home",
+        stock: 10,
+        image: "https://via.placeholder.com/600x400?text=Chair"
+    },
+    {
+        id: 2,
+        name: "Modern Table",
+        price: 250,
+        category: "Home",
+        stock: 5,
+        image: "https://via.placeholder.com/600x400?text=Table"
+    },
+    {
+        id: 3,
+        name: "Bedside Lamp",
+        price: 80,
+        category: "Bedroom",
+        stock: 8,
+        image: "https://via.placeholder.com/600x400?text=Lamp"
+    },
+    {
+        id: 4,
+        name: "Kitchen Bowl",
+        price: 40,
+        category: "Kitchen",
+        stock: 15,
+        image: "https://via.placeholder.com/600x400?text=Bowl"
+    }
+];
+
+// 🔥 Replace loadProducts with this
+function loadProducts() {
+    allProducts = dummyProducts;
+    renderProducts(allProducts);
+}
 
         function renderProducts(products) {
             const grid = document.getElementById('productGrid');
