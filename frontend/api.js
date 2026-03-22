@@ -3,7 +3,7 @@
 
 const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
     ? 'http://localhost:5000/api'
-    : 'https://maison-api.onrender.com/api'; // ← UPDATE THIS to your Render URL after deploying
+    : 'https://maison-api-oanx.onrender.com/api'; // ← UPDATE THIS to your Render URL after deploying
 
 // ─── Auth Helpers ──────────────────────────────────────────────
 const Auth = {
